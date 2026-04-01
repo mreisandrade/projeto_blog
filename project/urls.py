@@ -16,7 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+# Configurações do projeto
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+
+# Verifica se está em DEBUG ainda (em desenvolvimento)
+if settings.DEBUG:
+    # Possibilita ver arquivos de medias enviados pelo usuário
+    # enquanto estiver em desenvolvimento
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT,
+    )
