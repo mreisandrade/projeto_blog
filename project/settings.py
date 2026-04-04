@@ -18,26 +18,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Caso for usar o Docker
 # /data/web/static
 # /data/web/media
-DATA_DIR = BASE_DIR.parent / 'data' / 'web'
+# DATA_DIR = BASE_DIR.parent / 'data' / 'web'
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'change-me')
+# SECRET_KEY = os.getenv('SECRET_KEY', 'change-me')
+
+SECRET_KEY = "django-insecure-u^r*5#u-y8_uoxqw(wfyjnc^5hz^(hs4k_&6x6qs(5025*+g#i"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # os.getenv(): busca variável de ambiente (sempre retorna str)
 # 0 é o valor padrão caso não seja encontrado
-DEBUG = bool(int(os.getenv('DEBUG', 0)))
+# DEBUG = bool(int(os.getenv('DEBUG', 0)))
 
-ALLOWED_HOSTS = [
-    # Percorre todas as variáveis do ALLOWED_HOSTS
-    h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',')
-    # Garante que só vai adicionar valores que não estão vazios
-    if h.split()
-]
+# ALLOWED_HOSTS = [
+#     # Percorre todas as variáveis do ALLOWED_HOSTS
+#     h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',')
+#     # Garante que só vai adicionar valores que não estão vazios
+#     if h.split()
+# ]
+
+DEBUG = True
+
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -49,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'blog',
 ]
 
 MIDDLEWARE = [
