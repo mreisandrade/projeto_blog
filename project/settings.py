@@ -77,10 +77,15 @@ TEMPLATES = [
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
+        # Injeta variáveis nos templates (ex.: request.user)
+        # Função que recebe uma request e devolve um dicionário
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # context processor adicionado para enviar as configurações
+                # do site
+                'site_setup.context_processors.site_setup',
             ],
         },
     },
