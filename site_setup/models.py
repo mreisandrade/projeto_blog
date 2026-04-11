@@ -1,5 +1,8 @@
 from django.db import models
 
+from utils.model_validators import validate_png
+from utils.images import resize_image
+
 
 class SiteSetup(models.Model):
     class Meta:
@@ -15,6 +18,44 @@ class SiteSetup(models.Model):
     show_description = models.BooleanField(default=True)
     show_pagination = models.BooleanField(default=True)
     show_footer = models.BooleanField(default=True)
+
+    # Campo de imagem que corresponde a logo do site
+    favicon = models.ImageField(
+        # Necessário fornecer o local de armazenamento da imagem
+        # Lembrando que ficará dentro da pasta "media"
+        upload_to='assets/favicon/%Y/%m',
+        # Campo não é obrigatório 
+        blank=True,
+        # Valor padrão
+        default='',
+        # Validadores do campo - deve ser um iterável
+        validators=[
+            # Verifica se a imagem enviada é PNG
+            validate_png,
+        ]
+    )
+
+    # Sobreescrevendo o método que salva os dados
+    # Assim, pode-se fazer algo antes ou depois de salvar os dados
+    def save(self, *args, **kwargs):
+        # Pegando o favicon atual - string
+        current_favicon_name = str(self.favicon.name)
+
+        # É necessário chamar o super do método
+        # Para salvar os dados
+        super().save(*args, **kwargs)
+
+        favicon_changed = False
+
+        # Verifica se já favicon
+        if self.favicon:
+            favicon_changed = self.favicon.name != current_favicon_name
+
+        # Verifica se o favicon for alterado
+        if favicon_changed:
+            # Redimensiona a imagem para ter largura de 32px 
+            resize_image(self.favicon, new_width=32)
+
 
     def __str__(self):
         return self.title
