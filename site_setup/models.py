@@ -57,6 +57,7 @@ class SiteSetup(models.Model):
             resize_image(self.favicon, new_width=32)
 
 
+    # Nome que é exibido ao chamar o model
     def __str__(self):
         return self.title
     
@@ -83,3 +84,8 @@ class MenuLink(models.Model):
         # Valor padrão
         default=None,
     )
+
+
+    # Nome que é exibido ao chamar o model
+    def __str__(self) -> str:
+        return self.text
