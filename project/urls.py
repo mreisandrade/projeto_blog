@@ -24,6 +24,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', include('blog.urls')),
     path('admin/', admin.site.urls),
+    # Django Summernote
+    path('summernote/', include('django_summernote.urls')),
 ]
 
 # Verifica se está em DEBUG ainda (em desenvolvimento)

@@ -1,9 +1,40 @@
 from django.db import models
 # Usuário padrão do Django
 from django.contrib.auth.models import User
+# Para Django Summernote
+from django_summernote.models import AbstractAttachment
 
 from utils.rands import slugify_new
 from utils.images import resize_image
+
+
+# Classe usada para o Summernote
+# Criada basicamente para sobreescrever o métodos save e 
+# redimensionar as imagens enviadas
+class PostAttachment(AbstractAttachment):
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = self.file.name
+
+         # Pegando o cover atual - string
+        current_file_name = str(self.file.name)
+
+        # É necessário chamar o super do método
+        # Para salvar os dados
+        super_save = super().save(*args, **kwargs)
+
+        file_changed = False
+
+        # Verifica se há cover
+        if self.file:
+            file_changed = self.file.name != current_file_name
+
+        # Verifica se cover for alterado
+        if file_changed:
+            # Redimensiona a imagem para ter largura de 900px 
+            resize_image(self.file, new_width=900, quality=70)
+
+        return super_save
 
 
 # Create your models here.
@@ -176,6 +207,8 @@ class Post(models.Model):
         help_text='Este campo precisará estar marcado para a página ser exibida publicamente'
     )
     # Conteúdo do post (HTML)
+    # Como instalar o Django Summernotes
+    # https://github.com/lqez/django-summernote
     content = models.TextField()
     # Capa do posts
     cover = models.ImageField(

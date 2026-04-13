@@ -1,4 +1,6 @@
 from django.contrib import admin
+# Para Django Summernote
+from django_summernote.admin import SummernoteModelAdmin
 
 from blog.models import Tag, Category, Page, Post
 
@@ -43,7 +45,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Page)
-class PageyAdmin(admin.ModelAdmin):
+# class PageyAdmin(admin.ModelAdmin):
+class PageyAdmin(SummernoteModelAdmin):
     # Campos mostrados
     list_display = 'id', 'title', 'slug'
     # Campos com link para abrir a edição dos dados
@@ -60,9 +63,13 @@ class PageyAdmin(admin.ModelAdmin):
         "slug": ('title',),
     }
 
+    # Informando quais campos usam summernote
+    summernote_fields = 'content',
+
 
 @admin.register(Post)
-class PostAdmin(admin.ModelAdmin):
+# class PostAdmin(admin.ModelAdmin):
+class PostAdmin(SummernoteModelAdmin):
     # Campos mostrados
     list_display = 'id', 'title', 'is_published', 'created_by'
     # Campos com link para abrir a edição dos dados
@@ -86,6 +93,9 @@ class PostAdmin(admin.ModelAdmin):
     }
 
     autocomplete_fields = 'tags', 'category'
+
+    # Informando quais campos usam summernote
+    summernote_fields = 'content',
 
 
     # Sobreescrevendo o método save_model para atribuir os 
