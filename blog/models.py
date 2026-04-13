@@ -175,12 +175,25 @@ class Page(models.Model):
         super().save(*args, **kwargs)
 
 
+# Extendendo o Manager do Django 
+class PostManager(models.Manager):
+    # Obter os posts publicados
+    def get_published(self):
+        return self.filter(is_published=True).order_by('-pk')
+
+
 # Posts do blog 
 class Post(models.Model):
     # Configurações do model
     class Meta:
         verbose_name = 'Post'
         verbose_name_plural = 'Posts'
+
+
+    # Manager padrão do Django - Não altera as funcionalidades
+    # objects = models.Manager()
+    # Manager extendido por mim
+    objects = PostManager()
 
     # Título do post
     title = models.CharField(max_length=64)

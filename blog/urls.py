@@ -9,6 +9,7 @@ app_name = 'blog'
 
 urlpatterns = [
     path('', index, name='index'),
-    path('post/', post, name='post'),
+    # Usando o slug para acessar o post
+    path('post/<slug:slug>/', post, name='post'),
     path('page/', page, name='page'),
 ]
