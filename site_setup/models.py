@@ -47,7 +47,7 @@ class SiteSetup(models.Model):
 
         favicon_changed = False
 
-        # Verifica se já favicon
+        # Verifica se há favicon
         if self.favicon:
             favicon_changed = self.favicon.name != current_favicon_name
 

@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 from utils.rands import slugify_new
+from utils.images import resize_image
 
 
 # Create your models here.
@@ -275,6 +276,22 @@ class Post(models.Model):
             # Cria a slug
             self.slug = slugify_new(self.title)
 
+        # Pegando o cover atual - string
+        current_cover_name = str(self.cover.name)
+
         # É necessário chamar o super do método
         # Para salvar os dados
-        super().save(*args, **kwargs)
+        super_save = super().save(*args, **kwargs)
+
+        cover_changed = False
+
+        # Verifica se há cover
+        if self.cover:
+            cover_changed = self.cover.name != current_cover_name
+
+        # Verifica se cover for alterado
+        if cover_changed:
+            # Redimensiona a imagem para ter largura de 900px 
+            resize_image(self.cover, new_width=900, quality=70)
+
+        return super_save
