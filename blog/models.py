@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 # Para Django Summernote
 from django_summernote.models import AbstractAttachment
+from django.urls import reverse
 
 from utils.rands import slugify_new
 from utils.images import resize_image
@@ -313,6 +314,15 @@ class Post(models.Model):
     def __str__(self) -> str:
         return self.title
     
+
+    # Usado para ver o caminho do post na página admin
+    def get_absolute_url(self):
+        # Se o post não estiver publicado, retorna a home
+        if not self.is_published:
+            return reverse('blog:index')
+        # Caso o post existir, acessa o post
+        return reverse('blog:post', args=(self.slug,))
+
 
     # Sobreescrevendo o método que salva os dados
     # Assim, pode-se fazer algo antes ou depois de salvar os dados

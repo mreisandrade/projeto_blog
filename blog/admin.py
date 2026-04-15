@@ -1,6 +1,8 @@
 from django.contrib import admin
 # Para Django Summernote
 from django_summernote.admin import SummernoteModelAdmin
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from blog.models import Tag, Category, Page, Post
 
@@ -85,7 +87,7 @@ class PostAdmin(SummernoteModelAdmin):
     # Ordem apresentada (ordem decrescente por id)
     ordering = '-id',
     # Campos somente para leitura
-    readonly_fields = 'created_at', 'updated_at', 'updated_by', 'created_by'
+    readonly_fields = 'created_at', 'updated_at', 'updated_by', 'created_by', 'link'
     # Completa automaticamente o campo, neste caso, o slug
     # o nome da tag
     prepopulated_fields = {
@@ -96,6 +98,28 @@ class PostAdmin(SummernoteModelAdmin):
 
     # Informando quais campos usam summernote
     summernote_fields = 'content',
+
+
+    # Funciona como um atributo da classe post 
+    # Apenas para a página do admin
+    def link(self, obj):
+        # Verifica se o objeto já foi criado (tem primary key)
+        if not obj.pk:
+            return '-'
+
+        # Pega a url do post (serm definir get_absolute_url no model)
+        # post_url = reverse('blog:post', args=(obj.slug,))
+        # Pega a url do post, depois de definida get_absolute_url no model)
+        post_url = obj.get_absolute_url()
+
+        # Isso não é renderizado automaticamente por segurança
+        # É necessário marcar a string como segura com o 
+        # mark_safe
+        safe_link = mark_safe(
+            f'<a target="_blank" href="{post_url}">Ver post</a>'
+        )
+        
+        return safe_link
 
 
     # Sobreescrevendo o método save_model para atribuir os 
