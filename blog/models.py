@@ -161,6 +161,15 @@ class Page(models.Model):
     # Nome que é exibido ao chamar o model
     def __str__(self) -> str:
         return self.title
+    
+
+    # Usado para ver o caminho do post na página admin
+    def get_absolute_url(self):
+        # Se o post não estiver publicado, retorna a home
+        if not self.is_published:
+            return reverse('blog:index')
+        # Caso o post existir, acessa o post
+        return reverse('blog:page', args=(self.slug,))
 
 
     # Sobreescrevendo o método que salva os dados
