@@ -1,40 +1,110 @@
+from typing import Any
+
 from django.core.paginator import Paginator
+from django.db.models.query import QuerySet
 from django.shortcuts import render
 # Usado para condicionais com OU no Django
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.http import Http404
+# Para usar Classes Based Views no Django
+from django.views.generic import ListView
 
 from blog.models import Post, Page
 
 
 PER_PAGE = 9
 
+'''
+Funtion Based Views -> São funções
+    - Mais usadas em aplicações simples
+Class Based Views -> São classes (POO)
+    - Para lógicas mais complicadas
+    - Deixa o código mais limpo, simples e fácil de testar
+    - Permite reutilizar código
 
-def index(request):
-    # Posts
-    # Os parênteses são usados apenas para quebrar a linha
-    # posts = (
-    #     Post
-    #     .objects
-    #     .filter(is_published=True)
-    #     .order_by('-pk')
-    # )
-    posts = Post.objects.get_published() # type: ignore
+Obs.: As classes based views do Django JÁ TEM PAGINAÇÃO, ou 
+não é necessário implementar isso, como foi feito anteriormente.
 
-    paginator = Paginator(posts, PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+Link para classes base do Django:
+https://docs.djangoproject.com/pt-br/4.2/ref/class-based-views/
+    - DetailView: 1 valor
+    - ListView: lista de valores
+'''
 
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': page_obj,
-            'page_title': 'Home - ',
-        },
-    )
 
+# def index(request):
+#     # Posts
+#     # Os parênteses são usados apenas para quebrar a linha
+#     # posts = (
+#     #     Post
+#     #     .objects
+#     #     .filter(is_published=True)
+#     #     .order_by('-pk')
+#     # )
+#     posts = Post.objects.get_published() # type: ignore
+
+#     paginator = Paginator(posts, PER_PAGE)
+#     page_number = request.GET.get("page")
+#     page_obj = paginator.get_page(page_number)
+
+#     return render(
+#         request,
+#         'blog/pages/index.html',
+#         {
+#             'page_obj': page_obj,
+#             'page_title': 'Home - ',
+#         },
+#     )
+
+# Class Based View equivalente a função "index"
+class PostListView(ListView):
+    # É necessário informar o model que está sendo usado
+    model = Post
+    # Por padrão, o Django tenta carregar um template padrão
+    # Por tanto, é necessário alterar o template
+    # Dica: Use seus próprios nomes, não os padrões do Django,
+    # neste caso
+    template_name = 'blog/pages/index.html'
+    # Definindo o nome do contexto enviado para o template
+    # Variável dentro do context
+    context_object_name = 'posts'
+    # Configurando a ordenação
+    ordering = '-pk',
+    # A paginação já está pronta no Class Based View
+    # É necessário apenas informar quanto elementos por página
+    paginate_by = PER_PAGE
+    # Definindo a QuerySet filtrar apenas os posts que estão 
+    # publicados. Outra forma é sobreescrever o método
+    # get_queryset(), como mostrado abaixo
+    queryset = Post.objects.get_published() # type: ignore
+
+
+    # Sobrescrevendo o método que opera o contexto
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # print()
+        # print(context)
+        # print()
+
+        # Atualizando o contexto com o título da página
+        context.update(
+            {
+                'page_title': 'Home - ',
+            }
+        )
+
+        return context
+    
+
+    # Sobrescrevendo o método que opera a QuerySet
+    # Para filtrar apenas os posts que estão publicados
+    # def get_queryset(self):
+    #     queryset =  super().get_queryset()
+    #     queryset = queryset.filter(is_published=True)
+    #     return queryset
+    
 
 def created_by(request, author_pk):
     # Buscando o usuário no model User

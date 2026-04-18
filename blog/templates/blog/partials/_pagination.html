@@ -1,4 +1,9 @@
-{% if page_obj and page_obj.has_other_pages %}
+{% comment %} Fazendo a view com Function Based View {% endcomment %}
+{% comment %} {% if page_obj and page_obj.has_other_pages %} {% endcomment %}
+
+{% comment %} Fazendo a view com Class Based View {% endcomment %}
+{% if is_paginated %}
+
 
 <div class="separator"></div>
 
