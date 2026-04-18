@@ -2,6 +2,8 @@ from django.core.paginator import Paginator
 from django.shortcuts import render
 # Usado para condicionais com OU no Django
 from django.db.models import Q
+from django.contrib.auth.models import User
+from django.http import Http404
 
 from blog.models import Post, Page
 
@@ -29,11 +31,24 @@ def index(request):
         'blog/pages/index.html',
         {
             'page_obj': page_obj,
-        }
+            'page_title': 'Home - ',
+        },
     )
 
 
 def created_by(request, author_pk):
+    # Buscando o usuário no model User
+    user = User.objects.filter(pk=author_pk).first()
+    
+    if user is None:
+        raise Http404()
+    
+    user_full_name = user.username
+    if user.first_name:
+        user_full_name = f'{user.first_name} {user.last_name}'
+
+    page_title = f'Posts de {user_full_name} - '
+
     # Posts
     # Os parênteses são usados apenas para quebrar a linha
     posts = (
@@ -54,7 +69,8 @@ def created_by(request, author_pk):
         'blog/pages/index.html',
         {
             'page_obj': page_obj,
-        }
+            'page_title': page_title,
+        },
     )
 
 
@@ -74,12 +90,18 @@ def category(request, slug):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    if len(page_obj) == 0:
+        raise Http404()
+
+    page_title = f'{page_obj[0].category.name} - Categoria - '
+
     return render(
         request,
         'blog/pages/index.html',
         {
             'page_obj': page_obj,
-        }
+            'page_title': page_title,
+        },
     )
 
 
@@ -99,11 +121,17 @@ def tag(request, slug):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    if len(page_obj) == 0:
+        raise Http404()
+
+    page_title = f'{page_obj[0].tags.first().name} - Tag - '
+
     return render(
         request,
         'blog/pages/index.html',
         {
             'page_obj': page_obj,
+            'page_title': page_title,
         }
     )
 
@@ -132,42 +160,58 @@ def search(request):
         )[0:PER_PAGE] # Pega apenas 9 valores
     )
 
+    # Pega, no máximo, 30 caracteres
+    page_title = f'{search_value[:30]} - Search - '
+
     return render(
         request,
         'blog/pages/index.html',
         {
             'page_obj': posts,
             'search_value': search_value,
-        }
+            'page_title': page_title,
+        },
     )
 
 
 def page(request, slug):
     # Pegando o post
-    page = (
+    page_object = (
         Page.objects
         .filter(is_published=True)
         .filter(slug=slug)
         .first() 
     ) # type: ignore
 
+    if page_object is None:
+        raise Http404()
+
+    page_title = f'{page_object.title} - Página - '
+
     return render(
         request,
         'blog/pages/page.html',
         {
-            'page': page,
-        }
+            'page': page_object,
+            'page_title': page_title,
+        },
     )
 
 
 def post(request, slug):
     # Pegando o post
-    post = Post.objects.get_published().filter(slug=slug).first() # type: ignore
+    post_object = Post.objects.get_published().filter(slug=slug).first() # type: ignore
+
+    if post_object is None:
+        raise Http404()
+
+    page_title = f'{post_object.title} - Post - '
 
     return render(
         request,
         'blog/pages/post.html',
         {
-            'post': post,
-        }
+            'post': post_object,
+            'page_title': page_title,
+        },
     )
