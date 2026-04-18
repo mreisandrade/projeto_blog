@@ -2,11 +2,11 @@ from typing import Any
 
 from django.core.paginator import Paginator
 from django.db.models.query import QuerySet
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 # Usado para condicionais com OU no Django
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 # Para usar Classes Based Views no Django
 from django.views.generic import ListView
 
@@ -60,7 +60,12 @@ https://docs.djangoproject.com/pt-br/4.2/ref/class-based-views/
 # Class Based View equivalente a função "index"
 class PostListView(ListView):
     # É necessário informar o model que está sendo usado
-    model = Post
+    # model = Post
+    # Configurando a ordenação
+    # ordering = '-pk',
+    # Neste caso, não foi necessário inforamr o model nem 
+    # o ordering pois já foi configurado a queryset
+
     # Por padrão, o Django tenta carregar um template padrão
     # Por tanto, é necessário alterar o template
     # Dica: Use seus próprios nomes, não os padrões do Django,
@@ -69,8 +74,7 @@ class PostListView(ListView):
     # Definindo o nome do contexto enviado para o template
     # Variável dentro do context
     context_object_name = 'posts'
-    # Configurando a ordenação
-    ordering = '-pk',
+    
     # A paginação já está pronta no Class Based View
     # É necessário apenas informar quanto elementos por página
     paginate_by = PER_PAGE
@@ -106,42 +110,109 @@ class PostListView(ListView):
     #     return queryset
     
 
-def created_by(request, author_pk):
-    # Buscando o usuário no model User
-    user = User.objects.filter(pk=author_pk).first()
+# def created_by(request, author_pk):
+#     # Buscando o usuário no model User
+#     user = User.objects.filter(pk=author_pk).first()
     
-    if user is None:
-        raise Http404()
+#     if user is None:
+#         raise Http404()
     
-    user_full_name = user.username
-    if user.first_name:
-        user_full_name = f'{user.first_name} {user.last_name}'
+#     user_full_name = user.username
+#     if user.first_name:
+#         user_full_name = f'{user.first_name} {user.last_name}'
 
-    page_title = f'Posts de {user_full_name} - '
+#     page_title = f'Posts de {user_full_name} - '
 
-    # Posts
-    # Os parênteses são usados apenas para quebrar a linha
-    posts = (
-        Post
-        .objects
-        .get_published() # type: ignore
-        # Os __ significa que está pegando o campo pk do created_by
-        # (foreign key), neste caso
-        .filter(created_by__pk=author_pk)
-    )
+#     # Posts
+#     # Os parênteses são usados apenas para quebrar a linha
+#     posts = (
+#         Post
+#         .objects
+#         .get_published() # type: ignore
+#         # Os __ significa que está pegando o campo pk do created_by
+#         # (foreign key), neste caso
+#         .filter(created_by__pk=author_pk)
+#     )
 
-    paginator = Paginator(posts, PER_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+#     paginator = Paginator(posts, PER_PAGE)
+#     page_number = request.GET.get("page")
+#     page_obj = paginator.get_page(page_number)
 
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': page_obj,
-            'page_title': page_title,
-        },
-    )
+#     return render(
+#         request,
+#         'blog/pages/index.html',
+#         {
+#             'page_obj': page_obj,
+#             'page_title': page_title,
+#         },
+#     )
+
+# Class Based View equivalente a função "created_by"
+class CreatedByListView(PostListView):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._temp_context: dict[str, Any] = {}
+
+    # Sobrescrevendo o método get para retornar uma HTTP404
+    # caso o usuário não exista
+    # O método get deve retornar um HTTP response
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        # self.kwargs contém as variáveis que são enviadas
+        # para a view pela URL (link em urls.py)
+        # print()
+        # print('ARGUMENTOS', self.kwargs)
+        # print()
+
+        # Buscando o usuário no model User
+        author_pk = self.kwargs.get('author_pk')
+        user = User.objects.filter(pk=author_pk).first()
+        
+        if user is None:
+            raise Http404()
+            # Exemplo de redirecionar, não levar um Erro404   
+            # return redirect('blog:index')
+
+        # Atualizando o contexto com o título da página
+        self._temp_context.update(
+            {
+                'author_pk': author_pk,
+                'user': user,
+            }
+        )
+        
+        return super().get(request, *args, **kwargs)
+
+
+    # Sobrescrevendo o método que opera o contexto
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Pegando o user que vem do método get
+        # O get é executado antes do get_context_data
+        user = self._temp_context['user']
+        
+        user_full_name = user.username
+        if user.first_name:
+            user_full_name = f'{user.first_name} {user.last_name}'
+
+        page_title = f'Posts de {user_full_name} - '
+
+        # Atualizando o contexto com o título da página
+        context.update(
+            {
+                'page_title': page_title,
+            }
+        )
+
+        return context
+    
+
+    # Sobrescrevendo o método que opera a QuerySet
+    # Para filtrar apenas os posts que estão publicados
+    def get_queryset(self):
+        queryset =  super().get_queryset()
+        queryset = queryset.filter(created_by__pk=self._temp_context['user'].pk)
+        return queryset
 
 
 def category(request, slug):
