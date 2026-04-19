@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
 from pathlib import Path
+# Usado para carregar os arquivos do .env
+# É necessário instalar o pacote usando: pip install python-dotenv
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,6 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # /data/web/media
 # DATA_DIR = BASE_DIR.parent / 'data' / 'web'
 
+# DOTENV
+# Por padrão, tenta carregar o arquivo .env na pasta raíz
+# O override permite sobreescrever as variáveis já definidas
+# Caso for para a produção, carregar os arquivos em asgi.py ou wsgi.py
+load_dotenv(BASE_DIR / 'dotenv_file', override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -45,7 +54,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -62,6 +70,12 @@ INSTALLED_APPS = [
 
     # Django Summernote
     'django_summernote',
+
+    # Axes é utilizado para evitar login forçado
+    # É necessário instalá-lo usando: pip install django-axes
+    # Depois de configurado, é necessário fazer as migrações
+    # Documentação: https://django-axes.readthedocs.io/en/latest/4_configuration.html
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +86,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # PARA O AXES
+    # AxesMiddleware should be the last middleware in the MIDDLEWARE list.
+    # It only formats user lockout messages and renders Axes lockout responses
+    # on failed user authentication attempts from login views.
+    # If you do not want Axes to override the authentication response
+    # you can skip installing the middleware and use your own views.
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'project.urls'
@@ -198,3 +220,24 @@ SUMMERNOTE_CONFIG = {
     # Está no blog/models.py
     'attachment_model': 'blog.PostAttachment',
 }
+
+# AXES SETTINGS
+
+AUTHENTICATION_BACKENDS = [
+    # AxesStandaloneBackend should be the first backend in the AUTHENTICATION_BACKENDS list.
+    'axes.backends.AxesStandaloneBackend',
+
+    # Django ModelBackend is the default authentication backend.
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Se o Axes está ativo
+AXES_ENABLED = True
+# Limite de falhas
+AXES_FAILURE_LIMIT = 3
+# Tempo de espera depois da falha
+AXES_COOLOFF_TIME = 1  # 1 Hora
+# Reinicia a contagem de erros em efetuar o login com sucesso
+AXES_RESET_ON_SUCCESS = True
+
+# Para reiniciar, insira o comando python manage.py axes_reset
